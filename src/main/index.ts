@@ -44,7 +44,8 @@ declare const YTMD_DISABLE_UPDATES: boolean;
 declare const YTMD_UPDATE_FEED_OWNER: string;
 declare const YTMD_UPDATE_FEED_REPOSITORY: string;
 
-const assetFolder = path.join(process.env.NODE_ENV === "development" ? path.join(app.getAppPath(), "src/assets") : process.resourcesPath);
+const isDevelopment = !app.isPackaged;
+const assetFolder = path.join(isDevelopment ? path.join(app.getAppPath(), "src/assets") : process.resourcesPath);
 const isDarwin = process.platform === "darwin";
 
 let applicationExited = false;
@@ -314,10 +315,10 @@ if (app.isPackaged && !shouldDisableUpdates() && !YTMD_DISABLE_UPDATES) {
 }
 
 function getIconPath(icon: string) {
-  return path.join(assetFolder, `${process.env.NODE_ENV === "development" ? "icons/" : ""}${icon}`);
+  return path.join(assetFolder, ...(isDevelopment ? ["icons", icon] : [icon]));
 }
 function getControlsIconPath(icon: string) {
-  return getIconPath(`${process.env.NODE_ENV === "development" ? "controls/" : ""}${icon}`);
+  return path.join(assetFolder, ...(isDevelopment ? ["icons", "controls", icon] : [icon]));
 }
 
 function anyShortcutChanged(newState: Readonly<StoreSchema>, oldState: Readonly<StoreSchema>) {
@@ -689,7 +690,7 @@ function trayIconFileName(style: TrayIconStyle) {
 
 function getTrayIconPath() {
   const style = store.get("appearance").trayIconStyle;
-  const iconsDir = process.env.NODE_ENV === "development" ? path.join(app.getAppPath(), "src/assets/icons") : process.resourcesPath;
+  const iconsDir = isDevelopment ? path.join(app.getAppPath(), "src/assets/icons") : process.resourcesPath;
   return path.join(iconsDir, trayIconFileName(style));
 }
 
