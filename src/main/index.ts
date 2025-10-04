@@ -44,7 +44,9 @@ declare const YTMD_DISABLE_UPDATES: boolean;
 declare const YTMD_UPDATE_FEED_OWNER: string;
 declare const YTMD_UPDATE_FEED_REPOSITORY: string;
 
-const assetFolder = path.join(process.env.NODE_ENV === "development" ? path.join(app.getAppPath(), "src/assets") : process.resourcesPath);
+const isDevelopment = !app.isPackaged;
+
+const assetFolder = isDevelopment ? path.join(app.getAppPath(), "src/assets") : process.resourcesPath;
 const isDarwin = process.platform === "darwin";
 
 let applicationExited = false;
@@ -314,10 +316,10 @@ if (app.isPackaged && !shouldDisableUpdates() && !YTMD_DISABLE_UPDATES) {
 }
 
 function getIconPath(icon: string) {
-  return path.join(assetFolder, `${process.env.NODE_ENV === "development" ? "icons/" : ""}${icon}`);
+  return path.join(assetFolder, `${isDevelopment ? "icons/" : ""}${icon}`);
 }
 function getControlsIconPath(icon: string) {
-  return getIconPath(`${process.env.NODE_ENV === "development" ? "controls/" : ""}${icon}`);
+  return getIconPath(`${isDevelopment ? "controls/" : ""}${icon}`);
 }
 
 function anyShortcutChanged(newState: Readonly<StoreSchema>, oldState: Readonly<StoreSchema>) {
@@ -435,7 +437,7 @@ store.onDidAnyChange(async (newState, oldState) => {
   }
 
   // Setting start on boot in development tends to cause a blank electron executable to start on boot so let's never set that
-  if (process.env.NODE_ENV !== "development") {
+  if (!isDevelopment) {
     app.setLoginItemSettings({
       openAtLogin: newState.general.startOnBoot
     });
@@ -689,7 +691,7 @@ function trayIconFileName(style: TrayIconStyle) {
 
 function getTrayIconPath() {
   const style = store.get("appearance").trayIconStyle;
-  const iconsDir = process.env.NODE_ENV === "development" ? path.join(app.getAppPath(), "src/assets/icons") : process.resourcesPath;
+  const iconsDir = isDevelopment ? path.join(app.getAppPath(), "src/assets/icons") : process.resourcesPath;
   return path.join(iconsDir, trayIconFileName(style));
 }
 
@@ -975,7 +977,7 @@ const createOrShowSettingsWindow = (): void => {
   });
 
   settingsWindow.webContents.on("will-navigate", event => {
-    if (process.env.NODE_ENV === "development") if (event.url.startsWith("http://localhost")) return;
+    if (isDevelopment && event.url.startsWith("http://localhost")) return;
 
     event.preventDefault();
   });
@@ -983,7 +985,7 @@ const createOrShowSettingsWindow = (): void => {
   settingsWindow.on("ready-to-show", () => {
     settingsWindow.show();
     // Open the DevTools.
-    if (process.env.NODE_ENV === "development") {
+    if (isDevelopment) {
       settingsWindow.webContents.openDevTools({
         mode: "detach"
       });
@@ -1306,7 +1308,7 @@ const createMainWindow = (): void => {
   });
 
   mainWindow.webContents.on("will-navigate", event => {
-    if (process.env.NODE_ENV === "development") if (event.url.startsWith("http://localhost")) return;
+    if (isDevelopment && event.url.startsWith("http://localhost")) return;
 
     event.preventDefault();
   });
@@ -1314,7 +1316,7 @@ const createMainWindow = (): void => {
   mainWindow.on("ready-to-show", () => {
     mainWindow.show();
     // Open the DevTools.
-    if (process.env.NODE_ENV === "development") {
+    if (isDevelopment) {
       mainWindow.webContents.openDevTools({
         mode: "detach"
       });
@@ -1582,7 +1584,7 @@ app.on("ready", async () => {
         width: mainWindow.getContentBounds().width,
         height: mainWindow.getContentBounds().height - 36
       });
-      if (process.env.NODE_ENV === "development") {
+      if (isDevelopment) {
         ytmView.webContents.openDevTools({
           mode: "detach"
         });
